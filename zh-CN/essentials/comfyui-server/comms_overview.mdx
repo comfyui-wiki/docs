@@ -1,0 +1,14 @@
+---
+title: "服务器概述"
+---
+
+## 概述
+
+Comfy服务器基于[aiohttp框架](https://docs.aiohttp.org/)运行，而后者又使用[asyncio](https://pypi.org/project/asyncio/)。
+
+服务器到客户端的消息通过服务器的`send_sync`方法发送，服务器是`PromptServer`的实例（在`server.py`中定义）。这些消息
+由在`api.js`中注册的套接字事件监听器处理。见[消息](./comms_messages)。
+
+客户端到服务器的消息通过在`api.js`中定义的`api.fetchApi()`方法发送，并由服务器定义的http路由处理。见[路由](./comms_routes)。
+
+<Tip>当你将请求加入队列时，客户端会提交整个工作流（包括小部件值等）。服务器不会接收到你在将请求发送到队列后所做的任何更改。如果你想在执行过程中修改服务器行为，你需要路由。</Tip>

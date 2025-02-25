@@ -1,0 +1,89 @@
+---
+title: "消息"
+---
+
+## 消息
+
+在执行过程中（或者队列状态发生变化时），`PromptExecutor`通过`PromptServer`的`send_sync`方法向客户端发送消息。
+
+这些消息由`api.js`中定义的套接字事件监听器接收（在编写时大约在第90行，或者搜索`this.socket.addEventListener`），
+该监听器为任何已知的消息类型创建一个`CustomEvent`对象，并将其分派给任何已注册的监听器。
+
+扩展可以注册以接收事件（通常在`setup()`函数中完成），遵循标准的Javascript习惯：
+
+```Javascript
+api.addEventListener(message_type, messageHandler);
+```
+
+如果`message_type`不是内置的类型之一，它将自动添加到已知消息类型的列表中。消息`messageHandler`
+将使用`CustomEvent`对象调用，该对象扩展了套接字引发的事件，以添加一个`.detail`属性，该属性是服务器发送的数据的字典。因此，使用通常是这样的：
+
+```Javascript
+function messageHandler(event) {
+    if (event.detail.node == aNodeIdThatIsInteresting) {
+        // do something with event.detail.other_things
+    }
+}
+```
+
+### 内置消息类型
+
+在执行过程中（或者队列状态发生变化时），`PromptExecutor`通过`PromptServer`的`send_sync`方法向客户端发送以下消息。扩展可以注册为这些消息的任何一个监听器。
+
+| 事件                   | 何时发生                                                                      | 数据                                                                                                    |
+| ----------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `execution_start`       | 当一个提示即将运行时                                              | `prompt_id`                                                                                             |
+| `execution_error`       | 在执行过程中发生错误时                                      | `prompt_id`，以及其他附加信息                                                                |
+| `execution_interrupted` | 当节点引发`InterruptProcessingException`导致执行停止时 | `prompt_id`，`node_id`，`node_type`和`executed`（已执行节点的列表）                           |
+| `execution_cached`      | 在执行开始时                                                  | `prompt_id`，`nodes`（一个节点列表，这些节点的缓存输出可以被使用） |
+| `executing`             | 当一个新节点即将执行时                                    | `node`（节点id或`None`表示完成），`prompt_id`                                          |
+| `executed`              | 当一个节点返回一个ui元素时                               | `node`（节点id），`prompt_id`，`output`                                                                 |
+| `progress`              | 在执行实现所需钩子的节点时                               | `node`（节点id），`prompt_id`，`value`，`max`                                                           |
+| `status`                | 当队列状态发生变化时                                      | `exec_info`，一个包含`queue_remaining`的字典，队列中的条目数                 |
+
+### 使用executed
+
+尽管名称是`executed`，但只有当节点返回一个ui更新时才会发送`executed`消息（不像`executing`，它在节点完成执行时发送）。
+
+为了实现这一点，主函数需要返回一个字典，而不是一个元组：
+
+```python
+# 在我的主方法的末尾
+        return { "ui":a_new_dictionary, "result": the_tuple_of_output_values }
+```
+
+`a_new_dictionary`将作为`executed`消息的`output`值发送。
+如果节点没有输出（例如，`nodes.py`中的`SaveImage`的代码），则可以省略`result`键。
+
+### 自定义消息类型
+
+如上所述，客户端可以通过注册为唯一的消息类型名称的监听器，简单地添加自定义消息类型。
+
+```Javascript
+api.addEventListener("my.custom.message", messageHandler);
+```
+
+在服务器端，代码同样简单：
+
+```Python
+from server import PromptServer
+# 然后，在您的主执行函数（通常）
+        PromptServer.instance.send_sync("my.custom.message", a_dictionary)
+```
+
+#### 获取node\_id
+
+大多数内置消息在`node`的值中包含当前节点id。您可能也会想要这样做。
+
+在服务器端，可以通过`INPUT_TYPES`字典中的`hidden`键获取节点id，该字典在`hidden`键中包含一个`node_id`的隐藏输入：
+
+```Python
+    @classmethod    
+    def INPUT_TYPES(s):
+        return {"required" : { }, # 你的必需输入
+                "hidden": { "node_id": "UNIQUE_ID" } } # 添加hidden键
+
+    def my_main_function(self, required_inputs, node_id):
+        # 做一些事情
+        PromptServer.instance.send_sync("my.custom.message", {"node": node_id, "other_things": etc})
+```

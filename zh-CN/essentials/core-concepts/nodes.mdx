@@ -1,0 +1,38 @@
+---
+title: "节点"
+icon: "circle"
+---
+
+{/*
+description: "了解ComfyUI中的节点概念"
+*/}
+
+
+## 节点执行操作
+
+在计算机科学中，一个**_节点_**是一个信息的容器，通常包括编程的指令来执行某些任务。节点几乎从不孤立存在，它们几乎总是与其他节点在一个网络化的图形中连接。 在ComfyUI中，节点以连接到其他节点的盒子的形式出现。
+
+ComfyUI节点通常是**_函数操作符_**。这意味着它们对一些数据执行某些操作。一个函数是一个接受输入数据、对其执行某些操作并产生输出数据的过程。换言之，节点执行一些工作，贡献于完成一个任务，例如生成一幅图像。因此，ComfyUI节点几乎总是至少有一个输入或输出，并且通常有多个输入和输出。
+
+## 自定义节点
+
+ComfyUI在基本安装包中包括了许多强大的节点。这些被称为**Comfy核心**节点。此外，ComfyUI社区还创建了一个惊人的自定义节点数组，以执行各种各样的函数。 
+
+
+## ComfyUI管理器
+
+**ComfyUI管理器**窗口使得执行自定义节点管理任务变得容易，例如搜索、安装、更新、禁用和卸载。管理器包含在ComfyUI桌面应用程序中，但不在ComfyUI服务器应用程序中。 
+
+### 安装管理器
+
+如果你正在运行ComfyUI服务器应用程序，你需要安装管理器。如果ComfyUI正在运行，请在继续之前关闭它。
+
+第一步是安装Git，一个用于软件版本控制的命令行应用程序。Git将从[github.com](https://github.com)下载ComfyUI管理器。从[git-scm.com](https://git-scm.com/)下载Git并安装它。
+
+一旦Git安装完成，导航到ComfyUI服务器程序目录，到标记为**custom_nodes**的文件夹。打开一个命令窗口或终端。确保命令行显示的当前目录路径为**custom_nodes**。输入以下命令。这将下载管理器。技术上，这被称为_克隆Git仓库_。
+
+```bash
+git clone https://github.com/ltdrdata/ComfyUI-Manager.git
+```
+
+对于详细信息或特殊情况，请参见[ComfyUI管理器安装](https://github.com/ltdrdata/ComfyUI-Manager?tab=readme-ov-file#installation)。
